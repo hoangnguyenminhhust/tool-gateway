@@ -12,7 +12,7 @@ let ApiSchema = new Schema({
 		type: Boolean,
 		default: false
 	},
-	Endpoint :[
+	endpoints:[
 		{	
 			_id: new Schema.Types.ObjectId,
 			method : String,
