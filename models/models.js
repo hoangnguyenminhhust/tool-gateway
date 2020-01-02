@@ -14,7 +14,6 @@ let ApiSchema = new Schema({
 	},
 	endpoints:[
 		{	
-			_id: new Schema.Types.ObjectId,
 			method : String,
 			path: String, 
 			handler : String,
