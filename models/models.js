@@ -12,14 +12,8 @@ let ApiSchema = new Schema({
 		type: Boolean,
 		default: false
 	},
-	endpoints:[
-		{	
-			_id: new Schema.Types.ObjectId,
-			method : String,
-			path: String, 
-			handler : String,
-		}
-	]
+	endpoints: Array
+	
 });
 
 module.exports = mongoose.model("Api" , ApiSchema );

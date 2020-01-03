@@ -3,6 +3,8 @@ const mongoose = require("mongoose");
 // const apiSchema = mongoose.model("Api");
 const response = require("../libs/response");
 const apiSchema = require("../models/models");
+const Endpoints = require('../models/endpoint')
+
 module.exports = {
 	name: "ApiManage",
 
@@ -124,11 +126,11 @@ module.exports = {
 				}
 			},
 			async handler(ctx) {
-
 				try {
+					//console.log(ctx.params)
 					const newApi = new apiSchema(ctx.params.api);
 					let check = await apiSchema.findOne(ctx.params.api);
-					
+
 					if (!check) {
 						await newApi.save();
 						this.sendEvent();
@@ -142,6 +144,61 @@ module.exports = {
 					return error;
 				}
 			}
+		},
+		updateEndpoint: {
+			params: {
+
+				_id: "string"
+			},
+			async handler(ctx) {
+				const endpoint = await Endpoints.findOne({
+					routeId: ctx.params._id
+				})
+				endpoint.method = "GET"
+				await endpoint.save()
+
+				return endpoint
+
+			}
+		},
+
+		addEndpoint: {
+			params: {
+				api: {
+					type: "object"
+				},
+				_id: "string"
+			},
+			async handler(ctx) {
+
+				console.log(ctx.params)
+				const endpoint = new Endpoints({
+					...ctx.params.api,
+					routeId: {
+						_id: ctx.params._id
+					}
+				})
+				try {
+
+					await endpoint.save()
+
+
+
+					return response.success(endpoint)
+				} catch (error) {
+					return response.error(error)
+				}
+			}
+
+		},
+
+		createEndpoint: {
+			handler(ctx) {
+				console.log(ctx)
+			}
+		},
+		sendEventService() {
+			this.sendEvent()
 		}
 	},
 
@@ -150,7 +207,7 @@ module.exports = {
 	 */
 	events: {
 		"ApiManage.Changed"(data) {
-			return ("api created:", data);
+			console.log(data)
 		},
 	},
 
@@ -158,10 +215,52 @@ module.exports = {
 	 * Methods
 	 */
 	methods: {
+		async sendEvent() {
+			try {
+				
 
-		sendEvent() {
-			let data = apiSchema.find({});
-			this.broker.broadcast("ApiManage.Changed", data);
+				const data = await this.getConfig()
+
+				this.broker.broadcast("ApiManage.Changed", data);
+			} catch (error) {
+				return error
+			}
+		},
+
+		async getConfig() {
+
+			let configs = []
+			let routes = await apiSchema.find({})
+
+
+			for (let i = 0; i < routes.length; i++) {
+				let config = await this.findEndpoint(routes[i])
+				configs.push(config)
+			}
+
+			return configs
+
+		},
+
+		async findEndpoint(route) {
+
+			try {
+				let endpoints = await Endpoints.find({
+					routeId: route._id
+				})
+				console.log(endpoints)
+				let config = {
+					"name": route.name,
+					"path": route.path,
+					"authentication": route.authentication,
+					"endpoints": endpoints
+				}
+				//console.log(config)
+				return config
+			} catch (error) {
+				return error
+			}
+
 		}
 
 	},

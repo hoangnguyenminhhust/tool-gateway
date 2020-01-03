@@ -3,7 +3,7 @@ module.exports = {
 		return {
 			code: 200,
 			success: true,
-			data: data.data,
+			data: data,
 		};
 	},
 	error(error) {
