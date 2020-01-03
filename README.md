@@ -18,7 +18,7 @@ config Api GateWay
       { method: 'PUT', path: '/routes/:_idRoute', handler: 'ConfigApi.updateRoute' },
       { method: 'POST', path: '/routes', handler: 'ConfigApi.addRoute' },
       // Endpoints
-      { method: 'PUT', path: '/endpoints/:_idEndpoint/:_idRoute', handler: 'ConfigApi.updateEndpoint' },
+      { method: 'PUT', path: '/endpoints/:_idEndpoint', handler: 'ConfigApi.updateEndpoint' },
       { method: 'POST', path: '/endpoints', handler: 'ConfigApi.addEndpoint' },
       { method: 'DELETE', path: '/endpoints/:_idEndpoint', handler: 'ConfigApi.deleteEndpoint' },
       { method: 'GET', path: '/endpoints/all', handler: 'ConfigApi.listAllEndpoint' },
