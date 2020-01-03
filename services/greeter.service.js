@@ -17,6 +17,17 @@ module.exports = {
 
 
 	actions: {
+		listAllData: {
+			async handler() {
+				try {
+					let data = await this.getConfig();
+				
+					return response.success(data);
+				} catch (error) {
+					return response.error(error);
+				}
+			}
+		},
 		// Route 
 
 		listAllRoute: {
@@ -104,12 +115,12 @@ module.exports = {
 					if (!check) {
 						await newRoute.save();
 						this.sendEvent();
-						return newRoute;
+						return response.success(newRoute);
 					} else {
-						return "Existe";
+						throw new Error('Exist')
 					}
 				} catch (error) {
-					return error;
+					return response.error(error);
 				}
 			}
 		},
@@ -252,7 +263,7 @@ module.exports = {
 				let endpoints = await Endpoints.find({
 					routeId: route._id
 				})
-				console.log(endpoints)
+				
 				let config = {
 					"name": route.name,
 					"path": route.path,
