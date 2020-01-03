@@ -8,10 +8,7 @@ let ApiSchema = new Schema({
 		type: Boolean,
 		default : false
 	},
-	authorziration : {
-		type: Boolean,
-		default: false
-	},
+
 
 });
 

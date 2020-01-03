@@ -33,18 +33,15 @@ module.exports = {
 
 		findbyNameRoute: {
 			params: {
-				path: "string"
+				name: "string"
 			},
 			async handler(ctx) {
 				try {
 					let data = await Route.find({
-						config: {
-							path: {
-								"$regex": `${ctx.params.params}`,
-								"$options": "i"
-							}
+						name: {
+							"$regex": `${ctx.params.name}`,
+							"$options": "i"
 						}
-
 					});
 					return response.success(data);
 				} catch (error) {
@@ -60,7 +57,7 @@ module.exports = {
 			async handler(ctx) {
 				try {
 					await Route.findByIdAndDelete({
-						_id: ctx.params._id
+						_id: ctx.params._idRoute
 					});
 					this.sendEvent();
 					return response.success("Done");
@@ -79,7 +76,7 @@ module.exports = {
 			async handler(ctx) {
 				try {
 					await Route.findByIdAndUpdate({
-						_id: ctx.params._id
+						_id: ctx.params._idRoute
 					}, ctx.params.newBody, {
 						new: true
 					});
@@ -130,7 +127,7 @@ module.exports = {
 						ctx.params.newBody
 					)
 					if (EndpointCheck) {
-						return response.error("Exist Endpoint of This Route : ", EnpointOfRoute)
+						return response.error("Exist Endpoint of This Route ")
 					} else {
 						await Endpoints.findOneAndUpdate({
 							_id: ctx.params._idEndpoint
@@ -149,22 +146,31 @@ module.exports = {
 
 		addEndpoint: {
 			params: {
-				api: {
+				newBody: {
 					type: "object"
 				},
 				_idRoute: "string"
 			},
 			async handler(ctx) {
-				const endpoint = new Endpoints({
-					...ctx.params.api,
+				let check = await Endpoints.findOne({
+					method: ctx.params.newBody.method,
+					path: ctx.params.newBody.path,
+					handler: ctx.params.newBody.handler,
 					routeId: ctx.params._idRoute
 				})
-				try {
+				if (check) {
+					return response.error({
+						message: "Exist"
+					})
+				} else {
+					const endpoint = new Endpoints({
+						...ctx.params.newBody,
+						routeId: ctx.params._idRoute
+					})
 					await endpoint.save()
 					this.sendEvent();
 					return response.success(endpoint)
-				} catch (error) {
-					return response.error(error)
+
 				}
 			}
 
