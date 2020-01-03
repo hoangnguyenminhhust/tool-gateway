@@ -100,7 +100,9 @@ module.exports = {
 			},
 			async handler(ctx) {
 				try {
-					const newRoute = new Route(ctx.params.newBody);
+					const newRoute = new Route({
+						...ctx.params.newBody,
+					});
 					let check = await Route.findOne(ctx.params.newBody);
 					if (!check) {
 						await newRoute.save();
@@ -120,22 +122,21 @@ module.exports = {
 		updateEndpoint: {
 			params: {
 				newBody: "object",
-				_idEndpoint: "string",
-				_idRoute: "string"
+				_idEndpoint: "string"
 			},
 			async handler(ctx) {
 				try {
-					const EnpointOfRoute = await Endpoints.findOne({
-						routeId: _idRoute
-					})
-					if (EnpointOfRoute === ctx.params.newBody) {
+					const EndpointCheck = await Endpoints.findOne(
+						ctx.params.newBody
+					)
+					if (EndpointCheck) {
 						return response.error("Exist Endpoint of This Route : ", EnpointOfRoute)
 					} else {
 						await Endpoints.findOneAndUpdate({
 							_id: ctx.params._idEndpoint
 						}, ctx.params.newBody, {
 							new: true
-						});
+						})
 						this.sendEvent();
 						return response.success("Update Success");
 					}
