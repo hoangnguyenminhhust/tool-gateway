@@ -8,45 +8,15 @@ const Endpoints = require('../models/endpoint')
 module.exports = {
 	name: "ApiManage",
 
-	/**
-	 * Service settings
-	 */
+
 	settings: {
 
 	},
 
-	/**
-	 * Service dependencies
-	 */
 	dependencies: [],
 
-	/**
-	 * Actions
-	 */
+
 	actions: {
-
-		/**
-		 * Say a 'Hello'
-		 *
-		 * @returns
-		 */
-		hello() {
-			return "Hello Moleculer";
-		},
-
-		/**
-		 * Welcome a username
-		 *
-		 * @param {String} name - User name
-		 */
-		welcome: {
-			params: {
-				name: "string"
-			},
-			handler(ctx) {
-				return `Welcome, ${ctx.params.name}`;
-			}
-		},
 		listAll: {
 			async handler() {
 				try {
@@ -118,6 +88,31 @@ module.exports = {
 				}
 			}
 		},
+		
+		updateOne: {
+			params: {
+				newBody: "object",
+				_id: "string"
+			},
+			async handler(ctx) {
+				try {
+					const newBody2 = {
+						endpoints : [
+							ctx.params.newBody
+						]
+					};
+					let data = await apiSchema.findOne({
+						_id: ctx.params._id
+					});
+					
+					this.sendEvent();
+					return response.success("Update Success");
+				} catch (error) {
+					return response.error(error);
+				}
+			}
+		},
+		
 
 		create: {
 			params: {
@@ -138,8 +133,6 @@ module.exports = {
 					} else {
 						return "Existe";
 					}
-
-
 				} catch (error) {
 					return error;
 				}

@@ -11,9 +11,7 @@ let ApiSchema = new Schema({
 	authorziration : {
 		type: Boolean,
 		default: false
-	},
-	endpoints: Array
-	
+	}
 });
 
 module.exports = mongoose.model("Api" , ApiSchema );
