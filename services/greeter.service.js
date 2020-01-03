@@ -1,12 +1,12 @@
 "use strict";
 const mongoose = require("mongoose");
-// const apiSchema = mongoose.model("Api");
+// const Route = mongoose.model("Api");
 const response = require("../libs/response");
-const apiSchema = require("../models/models");
+const Route = require("../models/route");
 const Endpoints = require('../models/endpoint')
 
 module.exports = {
-	name: "ApiManage",
+	name: "ConfigApi",
 
 
 	settings: {
@@ -17,10 +17,13 @@ module.exports = {
 
 
 	actions: {
-		listAll: {
+		// Route 
+
+		listAllRoute: {
 			async handler() {
 				try {
-					let data = await apiSchema.find({});
+					let data = await Route.find({});
+					this.sendEvent();
 					return response.success(data);
 				} catch (error) {
 					return response.error(error);
@@ -28,13 +31,13 @@ module.exports = {
 			}
 		},
 
-		findbyName: {
+		findbyNameRoute: {
 			params: {
 				path: "string"
 			},
 			async handler(ctx) {
 				try {
-					let data = await apiSchema.find({
+					let data = await Route.find({
 						config: {
 							path: {
 								"$regex": `${ctx.params.params}`,
@@ -50,13 +53,13 @@ module.exports = {
 			}
 		},
 
-		delete: {
+		deleteRoute: {
 			params: {
-				_id: "string"
+				_idRoute: "string"
 			},
 			async handler(ctx) {
 				try {
-					await apiSchema.findByIdAndDelete({
+					await Route.findByIdAndDelete({
 						_id: ctx.params._id
 					});
 					this.sendEvent();
@@ -68,14 +71,14 @@ module.exports = {
 			}
 		},
 
-		update: {
+		updateRoute: {
 			params: {
 				newBody: "object",
-				_id: "string"
+				_idRoute: "string"
 			},
 			async handler(ctx) {
 				try {
-					await apiSchema.findByIdAndUpdate({
+					await Route.findByIdAndUpdate({
 						_id: ctx.params._id
 					}, ctx.params.newBody, {
 						new: true
@@ -88,48 +91,21 @@ module.exports = {
 				}
 			}
 		},
-		
-		updateOne: {
-			params: {
-				newBody: "object",
-				_id: "string"
-			},
-			async handler(ctx) {
-				try {
-					const newBody2 = {
-						endpoints : [
-							ctx.params.newBody
-						]
-					};
-					let data = await apiSchema.findOne({
-						_id: ctx.params._id
-					});
-					
-					this.sendEvent();
-					return response.success("Update Success");
-				} catch (error) {
-					return response.error(error);
-				}
-			}
-		},
-		
 
-		create: {
+		addRoute: {
 			params: {
-				api: {
+				newBody: {
 					type: "object"
 				}
 			},
 			async handler(ctx) {
 				try {
-					//console.log(ctx.params)
-					const newApi = new apiSchema(ctx.params.api);
-					let check = await apiSchema.findOne(ctx.params.api);
-
+					const newRoute = new Route(ctx.params.newBody);
+					let check = await Route.findOne(ctx.params.newBody);
 					if (!check) {
-						await newApi.save();
+						await newRoute.save();
 						this.sendEvent();
-						return newApi;
+						return newRoute;
 					} else {
 						return "Existe";
 					}
@@ -138,20 +114,35 @@ module.exports = {
 				}
 			}
 		},
+		// endpoint
+
+
 		updateEndpoint: {
 			params: {
-
-				_id: "string"
+				newBody: "object",
+				_idEndpoint: "string",
+				_idRoute: "string"
 			},
 			async handler(ctx) {
-				const endpoint = await Endpoints.findOne({
-					routeId: ctx.params._id
-				})
-				endpoint.method = "GET"
-				await endpoint.save()
+				try {
+					const EnpointOfRoute = await Endpoints.findOne({
+						routeId: _idRoute
+					})
+					if (EnpointOfRoute === ctx.params.newBody) {
+						return response.error("Exist Endpoint of This Route : ", EnpointOfRoute)
+					} else {
+						await Endpoints.findOneAndUpdate({
+							_id: ctx.params._idEndpoint
+						}, ctx.params.newBody, {
+							new: true
+						});
+						this.sendEvent();
+						return response.success("Update Success");
+					}
 
-				return endpoint
-
+				} catch (error) {
+					return response.error(error);
+				}
 			}
 		},
 
@@ -160,23 +151,16 @@ module.exports = {
 				api: {
 					type: "object"
 				},
-				_id: "string"
+				_idRoute: "string"
 			},
 			async handler(ctx) {
-
-				console.log(ctx.params)
 				const endpoint = new Endpoints({
 					...ctx.params.api,
-					routeId: {
-						_id: ctx.params._id
-					}
+					routeId: ctx.params._idRoute
 				})
 				try {
-
 					await endpoint.save()
-
-
-
+					this.sendEvent();
 					return response.success(endpoint)
 				} catch (error) {
 					return response.error(error)
@@ -185,12 +169,36 @@ module.exports = {
 
 		},
 
-		createEndpoint: {
-			handler(ctx) {
-				console.log(ctx)
+		deleteEndpoint: {
+			params: {
+				_idEndpoint: "string"
+			},
+			async handler(ctx) {
+				try {
+					await Endpoints.findOneAndDelete({
+						_id: ctx.params._idEndpoint
+					})
+					this.sendEvent();
+					return response.success("Delete Success")
+				} catch (error) {
+					return response.error(error)
+				}
 			}
 		},
-		sendEventService() {
+
+		listAllEndpoint: {
+			async handler() {
+				try {
+					let data = await Endpoints.find({});
+					this.sendEvent();
+					return response.success(data);
+				} catch (error) {
+					return response.error(error);
+				}
+			}
+		},
+
+		sendEventConfig() {
 			this.sendEvent()
 		}
 	},
@@ -199,7 +207,7 @@ module.exports = {
 	 * Events
 	 */
 	events: {
-		"ApiManage.Changed"(data) {
+		"ConfigApi.Changed"(data) {
 			console.log(data)
 		},
 	},
@@ -210,11 +218,8 @@ module.exports = {
 	methods: {
 		async sendEvent() {
 			try {
-				
-
 				const data = await this.getConfig()
-
-				this.broker.broadcast("ApiManage.Changed", data);
+				this.broker.broadcast("ConfigApi.Changed", data);
 			} catch (error) {
 				return error
 			}
@@ -223,7 +228,7 @@ module.exports = {
 		async getConfig() {
 
 			let configs = []
-			let routes = await apiSchema.find({})
+			let routes = await Route.find({})
 
 
 			for (let i = 0; i < routes.length; i++) {
@@ -236,7 +241,6 @@ module.exports = {
 		},
 
 		async findEndpoint(route) {
-
 			try {
 				let endpoints = await Endpoints.find({
 					routeId: route._id
@@ -248,7 +252,6 @@ module.exports = {
 					"authentication": route.authentication,
 					"endpoints": endpoints
 				}
-				//console.log(config)
 				return config
 			} catch (error) {
 				return error
